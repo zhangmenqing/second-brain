@@ -1,0 +1,3 @@
+# 自动处理 Windows 批处理脚本的换行符，确保在 Windows 上 checkout 出来是 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
