@@ -1,0 +1,26 @@
+# 临时 / 系统文件
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 大文件不进 git（用外链或单独存储）
+*.zip
+*.rar
+*.7z
+*.mp4
+*.mov
+*.psd
+*.ai
+*.iso
+
+# 敏感信息
+.secret/
+*.key
+*.pem
+*.env
+.env.*
+
+# 本地配置
+.local/
