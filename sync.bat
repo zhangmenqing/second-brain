@@ -1,27 +1,27 @@
 @echo off
 REM =====================================================================
-REM  Workbench è‡ªåŠ¨åŒæ­¥è„šæœ¬
-REM  åŠŸèƒ½ï¼šæŠŠ E:\workbench çš„æ”¹åŠ¨æäº¤å¹¶æŽ¨é€åˆ° GitHubï¼ˆæ— äººå€¼å®ˆå¯è·‘ï¼‰
-REM  ç”¨æ³•ï¼šåŒå‡»æ‰‹åŠ¨è·‘ï¼Œæˆ–ç”± Windows å®šæ—¶ä»»åŠ¡æ¯å°æ—¶è‡ªåŠ¨è·‘
+REM  Workbench ×Ô¶¯Í¬²½½Å±¾
+REM  ¹¦ÄÜ£º°Ñ E:\workbench µÄ¸Ä¶¯Ìá½»²¢ÍÆËÍµ½ GitHub£¨ÎÞÈËÖµÊØ¿ÉÅÜ£©
+REM  ÓÃ·¨£ºË«»÷ÊÖ¶¯ÅÜ£¬»òÓÉ Windows ¶¨Ê±ÈÎÎñÃ¿Ð¡Ê±×Ô¶¯ÅÜ
 REM =====================================================================
 cd /d E:\workbench
 
-REM æ—¥å¿—ç›®å½•ï¼ˆä¸è¿› gitï¼Œè§ .gitignore çš„ .sync/ï¼‰
+REM ÈÕÖ¾Ä¿Â¼£¨²»½ø git£¬¼û .gitignore µÄ .sync/£©
 if not exist ".sync" mkdir ".sync"
 set LOG=.sync\sync.log
 
 echo [%date% %time%] === auto-sync start === >> "%LOG%"
 
-REM 1) æŠŠå…¨éƒ¨æ”¹åŠ¨çº³å…¥æš‚å­˜
+REM 1) °ÑÈ«²¿¸Ä¶¯ÄÉÈëÔÝ´æ
 git add -A >> "%LOG%" 2>&1
 
-REM 2) æäº¤ï¼ˆæ²¡æœ‰æ”¹åŠ¨æ—¶ git ä¼šæç¤º nothing to commitï¼Œå±žæ­£å¸¸ï¼‰
+REM 2) Ìá½»£¨Ã»ÓÐ¸Ä¶¯Ê± git »áÌáÊ¾ nothing to commit£¬ÊôÕý³££©
 git commit -m "auto-sync %date% %time%" >> "%LOG%" 2>&1
 
-REM 3) å…ˆæ‹‰å–è¿œç«¯ï¼ˆrebase + autostashï¼Œä¿æŒçº¿æ€§ã€é¿å…æœ¬åœ°æ”¹åŠ¨ä¸¢å¤±ï¼‰
+REM 3) ÏÈÀ­È¡Ô¶¶Ë£¨rebase + autostash£¬±£³ÖÏßÐÔ¡¢±ÜÃâ±¾µØ¸Ä¶¯¶ªÊ§£©
 git pull --rebase --autostash >> "%LOG%" 2>&1
 
-REM 4) æŽ¨é€
+REM 4) ÍÆËÍ
 git push >> "%LOG%" 2>&1
 
 echo [%date% %time%] === auto-sync done (exit %errorlevel%) === >> "%LOG%"
