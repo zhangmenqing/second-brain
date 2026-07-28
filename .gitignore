@@ -24,3 +24,6 @@ desktop.ini
 
 # 本地配置
 .local/
+
+# 自动同步脚本的日志
+.sync/
