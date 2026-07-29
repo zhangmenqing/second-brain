@@ -41,3 +41,13 @@
   `git -c http.proxy= -c https.proxy= add -A` → `git commit`（含本 memory 摘要）→ `git pull --rebase --autostash` → `git push`（均带 `env -u HTTP_PROXY -u HTTPS_PROXY`）。
 - 结果：本地领先提交推送成功，本地与 `origin/main` 对齐（`rev-list --left-right --count origin/main...HEAD` = `0 0`），工作树干净。
 - 注意：本环境 git 配置 + 环境变量均指向离线代理 7890，常规 `git push` 会失败。只要代理没起，同步都需显式绕过代理或先启动代理（7890）。
+
+## 2026-07-29 17:15 (GMT+8)
+- 任务：执行 `E:\workbench\sync.bat` 完成每小时同步。
+- 结果：仓库本身已处于同步态（工作树干净，本地 vs `origin/main` = 0 ahead / 0 behind），但本次**未能与远端做实时校验/推送**，因当前环境 GitHub 整体不可达。
+- 过程与阻塞：
+  - `sync.bat` 存在。尝试 `cmd //c` 调用：Git Bash 下 `//c` 未被 cmd 识别为 `/c`，bat 体未真正执行（仅打印版本横幅即退出）；改用 `cmd /c` 又被沙箱安全策略拦截（"Invoking cmd.exe from Bash bypasses all command validation"）。故自动化子进程内无法直接跑该 bat。
+  - 退而在 Git Bash 直接跑 bat 等效逻辑：`git add -A` → `git commit`（工作树干净，无新提交）→ `git pull --rebase --autostash` → `git push`；代理绕过用「`env -u HTTP_PROXY -u HTTPS_PROXY` + `-c http.proxy= -c https.proxy=`」二者缺一不可（仅设 `-c http.proxy=` 会回退到环境变量里的离线代理）。
+  - `git pull/push` 均超时失败：`Failed to connect to github.com port 443`（~21s）。诊断：代理 7890 离线（curl 000）；DNS 可解析 github.com(20.205.243.166) 但直连 443 被阻断。
+- 结论：本地自 16:16 成功推送后无新改动、无未推送提交，无待同步内容；本次仅是无法与远端实时确认。网络/代理恢复后下一次同步即可正常 pull/push。
+- 备注：本会话早些时候曾瞬时测到 `curl --noproxy '*' https://github.com` 返回 200，疑为偶发通，随后稳定不可达。
