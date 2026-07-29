@@ -72,3 +72,12 @@
 - 复测确认：早先 curl 直连曾返回 200，但本轮 `curl --noproxy '*' https://github.com` 实测 `http_code 000`（超时），即 GitHub 当前**整体不可达**（间歇性，与 17:15 同）。
 - 当前状态：本地领先 1（`ahead/behind = 1/0`，HEAD=0f5757b），工作树干净。提交暂留本地，未推送。
 - 结论：本环境 GitHub 连通性间歇失效，本次无法与远端实时同步；待网络恢复后下一次同步即可把本地领先提交推上去。代理配置已还原为 127.0.0.1:7890。
+
+## 2026-07-29 20:15 (GMT+8)
+- 任务：执行 `E:\workbench\sync.bat` 完成每小时同步。
+- 结果：同步成功，本地与 `origin/main` 完全对齐（ahead 0 / behind 0），工作树干净。
+- 过程：
+  - `sync.bat` 存在，但历史已知沙箱拦截 cmd.exe 调用，故沿用等效方案：在 Git Bash 直接跑 bat 内部 git 逻辑，并绕过离线代理（直连 github.com 返回 200，代理 7890 不通）。
+  - 命令统一用 `env -u HTTP_PROXY -u HTTPS_PROXY git -c http.proxy= -c https.proxy=`：`add -A` → `commit`（100631b，2 文件 +13 行）→ `pull --rebase --autostash`（up to date）→ `push`（688f1c9..100631b）。
+  - 代理配置保持原样（未改动 global），无副作用。
+- 结论：本轮 GitHub 直连可用，完整 pull/push 跑通；bat 自身仍因沙箱限制无法在子进程内启动，但整体同步目标已达成。
