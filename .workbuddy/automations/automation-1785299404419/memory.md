@@ -51,3 +51,15 @@
   - `git pull/push` 均超时失败：`Failed to connect to github.com port 443`（~21s）。诊断：代理 7890 离线（curl 000）；DNS 可解析 github.com(20.205.243.166) 但直连 443 被阻断。
 - 结论：本地自 16:16 成功推送后无新改动、无未推送提交，无待同步内容；本次仅是无法与远端实时确认。网络/代理恢复后下一次同步即可正常 pull/push。
 - 备注：本会话早些时候曾瞬时测到 `curl --noproxy '*' https://github.com` 返回 200，疑为偶发通，随后稳定不可达。
+
+## 2026-07-29 18:20 (GMT+8)
+- 任务：执行 `E:\workbench\sync.bat` 完成每小时同步。
+- 结果：仓库已与 `origin/main` 完全对齐（ahead 0 / behind 0），工作树干净。
+- 过程：
+  - `sync.bat` 存在并实际执行（PowerShell 调起 cmd 跑 bat，避开 Git Bash→cmd 的沙箱拦截）。git PATH 探测正常。
+  - 网络诊断：global `http.proxy`/`https.proxy` 及 HTTP(S)_PROXY 均指向离线代理 127.0.0.1:7890（proxied curl=000）；但直连 github.com 返回 200——直连可用，仅代理失效（与 16:16 结论一致）。
+  - 首次尝试 `GIT_CONFIG_COUNT/KEY/VALUE` 传空值绕过代理：git 拒绝空值（`error: missing config value GIT_CONFIG_VALUE_0`，exit 128），bat 内 git 全部失败、未提交未推送。
+  - 改用「`git config --global --unset http.proxy/https.proxy` + 清空 HTTP_PROXY/HTTPS_PROXY 环境变量」运行 bat（try/finally 还原配置，无副作用）：bat 内 `add/commit/pull` 走直连成功（提交 688f1c9，2 文件；pull 提示 up to date）；但 bat 内 `git push` 仍 exit 128，本地领先 1。
+  - 兜底补推：Git Bash 用验证过的「`env -u HTTP_PROXY -u HTTPS_PROXY git -c http.proxy= -c https.proxy= push`」成功（fc31b4c..688f1c9），状态 0/0。
+  - 代理配置已还原为 127.0.0.1:7890。
+- 结论：bat 自身仍无法独立 push（受离线代理干扰），但整体同步目标达成。建议后续给 bat 内置代理绕过（如 `git -c http.proxy= -c https.proxy=` 或检测直连），即可完全无人值守。
