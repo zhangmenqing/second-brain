@@ -6,6 +6,14 @@ REM  用法：双击手动跑，或由 Windows 定时任务每小时自动跑
 REM =====================================================================
 cd /d E:\workbench
 
+REM === 定位 git（自动化/定时任务环境下 PATH 可能不含 git）===
+set "GIT_HOME="
+if exist "%USERPROFILE%\.workbuddy\vendor\PortableGit\mingw64\bin\git.exe" set "GIT_HOME=%USERPROFILE%\.workbuddy\vendor\PortableGit\mingw64\bin"
+if not defined GIT_HOME if exist "C:\Program Files\Git\cmd\git.exe" set "GIT_HOME=C:\Program Files\Git\cmd"
+if not defined GIT_HOME if exist "C:\Program Files\Git\bin\git.exe" set "GIT_HOME=C:\Program Files\Git\bin"
+if not defined GIT_HOME if exist "C:\Program Files (x86)\Git\bin\git.exe" set "GIT_HOME=C:\Program Files (x86)\Git\bin"
+if defined GIT_HOME set "PATH=%GIT_HOME%;%PATH%"
+
 REM 日志目录（不进 git，见 .gitignore 的 .sync/）
 if not exist ".sync" mkdir ".sync"
 set LOG=.sync\sync.log
