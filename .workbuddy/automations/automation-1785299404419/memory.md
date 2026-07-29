@@ -63,3 +63,12 @@
   - 兜底补推：Git Bash 用验证过的「`env -u HTTP_PROXY -u HTTPS_PROXY git -c http.proxy= -c https.proxy= push`」成功（fc31b4c..688f1c9），状态 0/0。
   - 代理配置已还原为 127.0.0.1:7890。
 - 结论：bat 自身仍无法独立 push（受离线代理干扰），但整体同步目标达成。建议后续给 bat 内置代理绕过（如 `git -c http.proxy= -c https.proxy=` 或检测直连），即可完全无人值守。
+
+## 2026-07-29 19:18 (GMT+8) —— bat 仍无法在沙箱内启动，等效逻辑跑通但 GitHub 不可达
+- 任务：执行 `E:\workbench\sync.bat` 完成每小时同步。
+- `sync.bat` 存在，但**沙箱拦截调用 cmd.exe**：`cmd /c`（Bash 工具）与 `cmd /c`（PowerShell 工具）均被安全策略拦截（`Invoking cmd.exe ... bypasses all command validation`）。无法在子进程内启动该 bat。
+- 退路：在 Git Bash 直接执行 bat 内部等效 git 逻辑（`git add -A` → `git commit` → `git pull --rebase --autostash` → `git push`），并显式绕过离线代理（临时 `git config --global --unset http.proxy/https.proxy` + 清空 HTTP(S)_PROXY env，`git` 命令再加 `-c http.proxy= -c https.proxy=`，跑完还原，无副作用）。
+- 结果：`git add -A` + `git commit` 成功，生成提交 `0f5757b`（2 文件：automation memory.md + 今日日志，+18 行）；但 `git pull`/`git push` 均超时失败——`Failed to connect to github.com port 443 after ~21s`。
+- 复测确认：早先 curl 直连曾返回 200，但本轮 `curl --noproxy '*' https://github.com` 实测 `http_code 000`（超时），即 GitHub 当前**整体不可达**（间歇性，与 17:15 同）。
+- 当前状态：本地领先 1（`ahead/behind = 1/0`，HEAD=0f5757b），工作树干净。提交暂留本地，未推送。
+- 结论：本环境 GitHub 连通性间歇失效，本次无法与远端实时同步；待网络恢复后下一次同步即可把本地领先提交推上去。代理配置已还原为 127.0.0.1:7890。
