@@ -6,12 +6,23 @@ REM  用法：双击手动跑，或由 Windows 定时任务每小时自动跑
 REM =====================================================================
 cd /d E:\workbench
 
+REM === 清理可能由外部自动化/调度器注入的损坏 git config 环境变量 ===
+REM 某些自动化环境会注入 GIT_CONFIG_COUNT=1 但 VALUE/KEY 为空，
+REM 导致每次 git 调用都报 "unable to parse command-line config"。置 0 即可修复。
+set "GIT_CONFIG_COUNT=0"
+set "GIT_CONFIG_VALUE_0="
+set "GIT_CONFIG_KEY_0="
+set "GIT_CONFIG_VALUE_1="
+set "GIT_CONFIG_KEY_1="
+
 REM === 定位 git（自动化/定时任务环境下 PATH 可能不含 git）===
 set "GIT_HOME="
 if exist "%USERPROFILE%\.workbuddy\vendor\PortableGit\mingw64\bin\git.exe" set "GIT_HOME=%USERPROFILE%\.workbuddy\vendor\PortableGit\mingw64\bin"
 if not defined GIT_HOME if exist "C:\Program Files\Git\cmd\git.exe" set "GIT_HOME=C:\Program Files\Git\cmd"
 if not defined GIT_HOME if exist "C:\Program Files\Git\bin\git.exe" set "GIT_HOME=C:\Program Files\Git\bin"
 if not defined GIT_HOME if exist "C:\Program Files (x86)\Git\bin\git.exe" set "GIT_HOME=C:\Program Files (x86)\Git\bin"
+if not defined GIT_HOME for /f "delims=" %%i in ('where git 2^>nul') do (set "GIT_HOME=%%~dpi" & goto :foundgit)
+:foundgit
 if defined GIT_HOME set "PATH=%GIT_HOME%;%PATH%"
 
 REM 日志目录（不进 git，见 .gitignore 的 .sync/）
