@@ -190,3 +190,10 @@
 - 命令：`fetch origin`（exit 0）→ 复查 `rev-list --left-right --count origin/main...HEAD` = `0 0`（远端无新提交）→ 工作树无改动，无需 commit/pull/push。
 - 本回合仅新增本 automation memory 摘要（局部改动），随后单独 `add/commit/push` 以持久化。
 - 结论：GitHub 直连可用，仓库本身已是最新同步态；bat 等效逻辑 + 代理绕过稳定可用，整体同步目标已达成，无遗留未推送提交。
+
+## 2026-07-31 00:24 (GMT+8) —— 直连+代理均通，推送积压的领先提交
+- 任务：执行 E:\workbench\sync.bat 完成每小时同步。
+- 状态诊断：`sync.bat` 存在（沙箱仍拦截 `cmd.exe`，无法直接启动 bat）；工作树干净；执行前 `rev-list --left-right --count origin/main...HEAD` = `0 1`（本地领先 1，为 `d5a4f90 auto-sync 2026/07/30 周四 23:37:46.08`，疑似 sync.bat 在沙箱外被调用时产生的 auto-sync 提交）；直连 github.com = 200/1.08s，代理 7890 = 200/1.10s（两者均通）。
+- 执行：沿用等效方案 Git Bash 跑 bat 内部 git 逻辑，显式绕过代理（`env -u HTTP_PROXY -u HTTPS_PROXY git -c http.proxy= -c https.proxy=`，直连）：`fetch origin`（exit 0）→ 复查仍 `0 1`（远端无新提交）→ `push origin main` 成功（`ac3d600..d5a4f90`）。
+- 结果：同步成功，本地与 `origin/main` 完全对齐（`0 0`），工作树干净，无遗留未推送提交。
+- 结论：GitHub 直连/代理双通道稳定，本次把上一轮积压的 1 个本地领先提交成功推上远端，整体同步目标达成。
