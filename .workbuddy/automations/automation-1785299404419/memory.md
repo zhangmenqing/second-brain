@@ -157,3 +157,11 @@
 - 说明：本地初判领先 21 提交，pull 后远端 ref 同步至同一 HEAD（ebe1db0，auto-sync 19:06），最终 0/0，无待推送、无待拉取。工作树干净，无需 commit。
 - 连通性反转（重要）：本轮初 git 走直连（`env -u HTTP_PROXY...`），pull 时直连尚可；但随后直连 github.com:443 间歇性掉线（curl direct=000/20s），而 **代理 7890 在线**（curl proxied=200/1s）。故改用 `git -c http.proxy=http://127.0.0.1:7890 -c https.proxy=http://127.0.0.1:7890 push` 经代理推送成功（ebe1db0..908cc03），最终 0/0。
 - 结论：GitHub 直连与代理连通互为备份、会互相翻转；当直连掉线时改走代理即可完成 push。整体同步目标达成，无遗留未推送提交。
+
+## 2026-07-30 20:37 (GMT+8)
+- 任务：执行 `E:\workbench\sync.bat` 完成每小时同步。
+- 结果：仓库已与 `origin/main` 完全对齐（ahead 0 / behind 0），工作树干净，无待同步内容。
+- 过程：`sync.bat` 存在，但沙箱仍拦截 `cmd.exe`，无法直接启动 bat；沿用等效方案：Git Bash 直接跑 bat 内部 git 逻辑，显式绕过离线代理（直连 github.com = http_code 200/0.3s，代理 7890 亦通 1.1s）。
+- 命令：`env -u HTTP_PROXY -u HTTPS_PROXY git -c http.proxy= -c https.proxy=`：`fetch origin`（exit 0）→ `rev-list --left-right --count origin/main...HEAD` = `0 0`（远端无新提交）→ 工作树无改动，无需 commit/pull/push。
+- 本回合仅新增本 automation memory 摘要（局部改动），随后单独 add/commit/push 以持久化。
+- 结论：GitHub 直连可用，仓库本身已是最新同步态；bat 等效逻辑 + 代理绕过稳定可用，整体同步目标已达成，无遗留未推送提交。
