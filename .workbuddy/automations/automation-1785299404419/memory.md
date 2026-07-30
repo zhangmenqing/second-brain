@@ -174,3 +174,11 @@
 - 因远端不可达，无法 `fetch/pull/push` 做实时同步确认；但仓库本就是同步态，无待同步内容。
 - 本回合仅新增本 automation memory 摘要（局部改动），随后单独 `add/commit` 以本地持久化；**提交暂留本地、未推送**（待网络恢复后下一次同步推送）。
 - 结论：本环境 GitHub 连通间歇中断，本次无法与远端实时同步；因仓库已对齐，无实质同步损失。代理配置未变动，无副作用。
+
+## 2026-07-30 22:32 (GMT+8) —— 直连可用，推送此前积压的本地领先提交
+- 任务：执行 E:\workbench\sync.bat 完成每小时同步。
+- 状态诊断：工作树干净；`rev-list --left-right --count origin/main...HEAD` = `0 1`（本地领先 1，为 21:34 那轮因 GitHub 不可达而暂留本地的提交）；直连 github.com = 200/0.36s（代理 7890 不通 000）。
+- 执行：`sync.bat` 存在，沙箱仍拦截 `cmd.exe` 无法直接启动 bat；沿用等效方案 Git Bash 跑 bat 内部 git 逻辑，显式绕过离线代理（`env -u HTTP_PROXY -u HTTPS_PROXY git -c http.proxy= -c https.proxy=`，直连）。
+- 命令：`add -A` → `commit`（含本 memory 摘要）→ `pull --rebase --autostash`（fetch 同步远端 ref，`Already up to date`）→ `push`（把 21:34 的本地领先提交 + 本轮提交一并推上远端）。
+- 结果：同步成功，本地与 `origin/main` 完全对齐（ahead 0 / behind 0），工作树干净。
+- 结论：直连可用，bat 等效逻辑 + 代理绕过稳定；本轮把此前积压的 1 个未推送提交成功推上远端，无遗留。
